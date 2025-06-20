@@ -1,68 +1,47 @@
 import asyncio
-import sys
-from logging import Logger
+from dataclasses import dataclass
 from typing import Any
 
 import httpx
 from httpx import AsyncHTTPTransport, AsyncClient, Timeout
 
-BASE_URL = "https://catfact.ninja"
+from learning_pytest.app.constants import BASE_URL
+from learning_pytest.app.dto import CatDataDTO
+from learning_pytest.app.logger import logger
 
 
-def configure_logger() -> Logger:
-    try:
-        from loguru import logger as loguru_logger
-
-        loguru_logger.remove()
-        loguru_logger.add(
-            sink=sys.stdout,
-            colorize=True,
-            level='DEBUG',
-            format='<cyan>{time:DD.MM.YYYY HH:mm:ss}</cyan> | <level>{level}</level> | <magenta>{message}</magenta>',
-        )
-        return loguru_logger  # type: ignore
-    except ImportError:
-        import logging
-
-        logging_logger = logging.getLogger('main_logger')
-        formatter = logging.Formatter(
-            datefmt='%Y.%m.%d %H:%M:%S',
-            fmt='%(asctime)s | %(levelname)s | func name: %(funcName)s | message: %(message)s',
-        )
-        handler = logging.StreamHandler(sys.stdout)
-        handler.setFormatter(formatter)
-        logging_logger.setLevel(logging.INFO)
-        logging_logger.addHandler(handler)
-        return logging_logger
 
 
-logger = configure_logger()
 
+@dataclass
 class AsyncNetScrapper:
 
     async def get_cats_facts(self) -> list[dict[str, Any]]:
         transport = AsyncHTTPTransport(retries=1)
         timeout = Timeout(timeout=2)
+        try:
+            async with AsyncClient(transport=transport, timeout=timeout) as client:
+                response = await self._async_request(client=client, url=f"{BASE_URL}/facts")
 
+                if not response:
+                    return []
 
+                last_page = response["last_page"]
 
-        async with AsyncClient(transport=transport, timeout=timeout) as client:
-            response = await self._async_request(client=client, url=f"{BASE_URL}/facts")
+                coros = []
+                for page in range(1, last_page + 1):
+                    coros.append(self._async_request(client=client, url=f"{BASE_URL}/facts?page={page}"))
 
-            if not response:
-                return []
+                all_cats_facts = await asyncio.gather(*coros)
+                cat_facts = []
+                for facts_page in all_cats_facts:
+                    for fact in facts_page["data"]:
+                        cat_facts.append(CatDataDTO(fact=fact["fact"], length=fact["length"]))
+                return cat_facts
+        except httpx.TimeoutException as error:
+            logger.error("time out to web resourse", error=error)
+            return []
 
-            last_page = response["last_page"]
-
-            coros = []
-            for page in range(1, last_page + 1):
-                coros.append(self._async_request(client=client, url=f"{BASE_URL}/facts?page={page}"))
-
-            all_cats_facts = await asyncio.gather(*coros)
-            cat_facts = []
-            for facts in all_cats_facts:
-                cat_facts.extend(facts["data"])
-            return cat_facts
 
     def run(self):
         return asyncio.run(self.get_cats_facts())
@@ -75,12 +54,3 @@ class AsyncNetScrapper:
         else:
             logger.info(f'got response status: {status} for uri: {url}')
             return None
-
-
-def main() -> None:
-    async_net_scrapper = AsyncNetScrapper()
-    facts = async_net_scrapper.run()
-    print(facts)
-
-
-main()
