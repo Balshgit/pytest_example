@@ -5,9 +5,9 @@ from typing import Any
 import httpx
 from httpx import AsyncHTTPTransport, AsyncClient, Timeout
 
-from learning_pytest.app.constants import BASE_URL
-from learning_pytest.app.dto import CatDataDTO
-from learning_pytest.app.logger import logger
+from app.constants import BASE_URL
+from app.dto import CatDataDTO
+from app.logger import logger
 
 
 
@@ -43,7 +43,7 @@ class AsyncNetScrapper:
             return []
 
 
-    def run(self):
+    def get_data(self):
         return asyncio.run(self.get_cats_facts())
 
     async def _async_request(self, client: AsyncClient, url: str) -> dict[str, Any] | None:

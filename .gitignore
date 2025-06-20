@@ -224,3 +224,4 @@ local.yaml
 # Ignore dynaconf secret files
 .secrets.*
 
+data/cats_facts.csv

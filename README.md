@@ -24,7 +24,7 @@ pip install -r requirements.txt
 В Pycharm запустить файлик `main.py`
 
 
-Или из консоли командой
+Или из консоли командой из корня приложения
 
 ```bash
 python3 main.py

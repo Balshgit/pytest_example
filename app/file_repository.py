@@ -1,7 +1,7 @@
 import csv
 from dataclasses import dataclass
 
-from learning_pytest.app.dto import CatDataDTO
+from app.dto import CatDataDTO
 
 
 @dataclass

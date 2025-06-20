@@ -1,6 +1,6 @@
 import os.path
 
-from learning_pytest.main import Application
+from main import Application
 
 
 # Пример теста, что мы сохранили в файл, но контент файла не проверяется тут никак

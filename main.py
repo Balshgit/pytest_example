@@ -4,10 +4,9 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from learning_pytest.app.dto import CatDataDTO
-from learning_pytest.app.api_scrapper import AsyncNetScrapper
-from learning_pytest.app.file_repository import FileRepository
-from learning_pytest.app.constants import DATA_DIR
+from app.api_scrapper import AsyncNetScrapper
+from app.file_repository import FileRepository
+from app.constants import DATA_DIR
 
 
 @dataclass
@@ -16,11 +15,11 @@ class Application:
     file_repository: FileRepository
 
     def save_cat_facts_to_csv(self, filename: str):
-        data = self.net_scrapper.run()
+        data = self.net_scrapper.get_data()
         self.file_repository.save_data_to_csv(filename, data)
 
     def get_cats_facts_from_web(self):
-        return self.net_scrapper.run()
+        return self.net_scrapper.get_data()
 
     def load_cat_facts_from_csv(self, filename: str) -> list[str]:
         return self.file_repository.load_data_from_csv(filename=filename)

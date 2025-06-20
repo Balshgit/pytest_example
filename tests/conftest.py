@@ -3,7 +3,7 @@ from typing import Generator
 
 import pytest
 
-from learning_pytest.main import Application, get_app
+from main import Application, get_app
 
 @pytest.fixture(scope="session")
 def test_application() -> Application:
